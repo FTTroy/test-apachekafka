@@ -1,0 +1,114 @@
+<!-- ESEMPIO DI LOGBACK.XML -->
+
+<?xml version="1.0" encoding="UTF-8" ?>
+<configuration debug="true" scan="true">
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+
+    <property name="TRACE_LOG_SUFFIX" value="TRACE"/>
+    <property name="USER_LOG_SUFFIX" value="USER"/>
+    <property name="DEFAULT_MAX_FILE_SIZE" value="5MB"/>
+
+    <property name="DEFAULT_PATTERN_STDOUT"
+              value="%white(%d{ISO8601}) | %5p | %magenta(applicazione=${applicazione:-KAFKA-PROJECT}) | %green(componente=${componente:-KAFKA-PROJECT-BE}) | %yellow(%X{USER-INFORMATION}) messaggio=%msg %n %wEx"/>
+
+    <property name="DEFAULT_PATTERN"
+              value="%d{ISO8601} | %-5level | applicazione=${applicazione:-KAFKA-PROJECT} | componente=${componente:-KAFKA-PROJECT-BE} | %X{USER-INFORMATION} messaggio=%msg %n %wEx"/>
+
+    <timestamp key="timestamp-by-second" datePattern="yyyy-MM-dd-'T-'HH_mm_ss"/>
+
+
+    <!--    ***************** FINE CONFIGURAZIONE PER PROFILO DEV ***************** -->
+    <springProfile name="dev">
+        <appender name="File-Rolling" class="ch.qos.logback.core.rolling.RollingFileAppender">
+            <file>
+                ${HOME_LOG:-target/log}/${applicazione:-KAFKA-PROJECT}-${componente:-KAFKA-PROJECT-BE}-${TRACE_LOG_SUFFIX}.${timestamp-by-second}.log
+            </file>
+
+            <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+                <fileNamePattern>
+                    ${HOME_LOG:-target/log}/archived/${applicazione:-KAFKA-PROJECT}.componente=${componente:-KAFKA-PROJECT-BE}.%d{yyyy-MM-dd}.%i.log.gz
+                </fileNamePattern>
+
+                <maxFileSize>5MB</maxFileSize>
+                <totalSizeCap>5GB</totalSizeCap>
+                <maxHistory>30</maxHistory>
+            </rollingPolicy>
+
+            <encoder class="ch.qos.logback.core.encoder.LayoutWrappingEncoder">
+                <layout class="com.github.FTTroy.util.MaskingPatternLayout">
+                    <pattern>
+                        ${DEFAULT_PATTERN}
+                    </pattern>
+                </layout>
+            </encoder>
+        </appender>
+
+        <appender name="Console" class="ch.qos.logback.core.ConsoleAppender">
+            <encoder class="ch.qos.logback.core.encoder.LayoutWrappingEncoder">
+                <layout class="com.github.FTTroy.util.MaskingPatternLayout">
+                    <pattern>
+                        ${DEFAULT_PATTERN_STDOUT}
+                    </pattern>
+                </layout>
+            </encoder>
+        </appender>
+    </springProfile>
+
+    <!--    ***************** FINE CONFIGURAZIONE PER PROFILO DEV ***************** -->
+
+
+    <!--    ***************** FINE CONFIGURAZIONE PER PROFILO SVIL - COLL - PROD ***************** -->
+    <springProfile name="svil">
+
+        <appender name="File-Rolling" class="ch.qos.logback.core.rolling.RollingFileAppender">
+            <file>
+                ${HOME_LOG:-/var/log/app}/${applicazione:-KAFKA-PROJECT}-${componente:-KAFKA-PROJECT-BE}-${TRACE_LOG_SUFFIX}.${timestamp-by-second}.log
+            </file>
+
+            <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
+                <fileNamePattern>
+                    ${HOME_LOG:-/var/log/app/}${applicazione:-KAFKA-PROJECT}-${componente:-KAFKA-PROJECT-BE}-${TRACE_LOG_SUFFIX}.%d{yyyy-MM-dd}.%i.log
+                </fileNamePattern>
+
+                <minIndex>1</minIndex>
+                <maxIndex>3</maxIndex>
+            </rollingPolicy>
+            <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
+                <maxFileSize>${DEFAULT_MAX_FILE_SIZE}</maxFileSize>
+            </triggeringPolicy>
+
+            <encoder class="ch.qos.logback.core.encoder.LayoutWrappingEncoder">
+                <layout class="com.github.FTTroy.util.MaskingPatternLayout"> <!-- modificato per visibilità -->
+                    <maskPattern>(\w+@\w+\.\w+)</maskPattern> <!-- Email pattern -->
+                    <maskPattern>(\d+\.\d+\.\d+\.\d+)</maskPattern> <!-- IP pattern -->
+                    <pattern>
+                        ${DEFAULT_PATTERN}
+                    </pattern>
+                </layout>
+            </encoder>
+        </appender>
+
+        <appender name="Console" class="ch.qos.logback.core.ConsoleAppender">
+            <encoder class="ch.qos.logback.core.encoder.LayoutWrappingEncoder">
+                <layout class="com.github.FTTroy.util.MaskingPatternLayout"> <!-- modificato per visibilità -->
+                    <pattern>
+                        ${DEFAULT_PATTERN_STDOUT}
+                    </pattern>
+                </layout>
+            </encoder>
+        </appender>
+    </springProfile>
+    <!--    ***************** FINE CONFIGURAZIONE PER PROFILO SVIL - COLL - PROD ***************** -->
+
+    <logger name="it.reactive.bstore.cert" level="INFO">
+        <appender-ref ref="File-Rolling"/>
+    </logger>
+
+    <logger name="org.springframework.boot.actuate" level="INFO"/>
+    <root>
+        <appender-ref ref="File-Rolling"/>
+        <appender-ref ref="Console"/>
+    </root>
+
+</configuration>
+

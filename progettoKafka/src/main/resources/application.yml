@@ -1,0 +1,26 @@
+topic:
+  input: {$INPUT_PLACE_HOLDER}
+  output: { $OUTPUT_PLACE_HOLDER}
+spring:
+  profiles:
+    active: @springProfile@
+  json:
+    use.type.headers: false
+    value:
+      default-type: com.github.FTTroy.model.input.InputMessage
+  kafka:
+   properties:
+     specific:
+       avro:
+         reader: true
+   producer:
+    key-serializer: org.apache.kafka.common.serialization.StringSerializer
+    value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+    bootstrap-servers: 10.207.236.68:29092
+   consumer:
+    properties:
+      spring.json.value.default.type: com.github.FTTroy.model.input.InputMessage
+      spring.deserializer.value.delegate.class: org.springframework.kafka.support.serializer.JsonDeserializer
+    value-deserializer: org.springframework.kafka.support.serializer.ErrorHandlingDeserializer
+    key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    bootstrap-servers: 10.207.236.68:29092
